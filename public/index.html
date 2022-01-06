@@ -10,7 +10,20 @@
   <script src="/dist/umd/vue.js"></script>
   <script>
     const vm = new Vue({
-      el: '#app'
+      el: '#app',
+      data() {
+        return {
+          name: 'aicherish',
+          age: 24,
+          foo: {
+            bar: 'bar'
+          },
+          arr: [1, { baz: 'baz' }]
+        }
+      }
     })
+
+    vm._data.arr.push({ hei: 'hei' })
+    console.log('vm._data >>> ', vm._data)
   </script>
 </html>
