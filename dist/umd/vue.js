@@ -193,10 +193,20 @@
   function initData(vm) {
     var data = vm.$options.data;
     vm._data = data = typeof data === 'function' ? data.call(vm) : data;
+    /*
+      观察数据
+      通过递归遍历对 data 中的数据进行观测
+      也就是通过 Object.defineProperty 添加 getter/setter 
+    */
+
     observe(data);
   }
 
   function initMixin(Vue) {
+    /*
+      初始化的工作
+      1、数据的响应式
+    */
     Vue.prototype._init = function (options) {
       var vm = this;
       vm.$options = options; // 初始化 state
@@ -205,9 +215,18 @@
     };
   }
 
+  /*
+    Vue 的构造函数
+    在使用 Vue 的过程中，我们使用 new Vue() 方式去创建 Vue 根实例
+  */
+
   function Vue(options) {
     this._init(options);
   }
+  /*
+    通过 mixin 的方式去混入方法
+  */
+
 
   initMixin(Vue);
 

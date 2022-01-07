@@ -25,7 +25,11 @@ function initMethods() {}
 function initData(vm) {
   let data = vm.$options.data
   vm._data = data = typeof data === 'function' ? data.call(vm) : data
-
+  /*
+    观察数据
+    通过递归遍历对 data 中的数据进行观测
+    也就是通过 Object.defineProperty 添加 getter/setter 
+  */
   observe(data)
 }
 function initComputed() {}
