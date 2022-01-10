@@ -6,7 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
   </head>
-  <body></body>
+  <body>
+    <div id="app">
+      <h3>{{ name }}</h3>
+    </div>
+  </body>
   <script src="/dist/umd/vue.js"></script>
   <script>
     const vm = new Vue({
@@ -22,8 +26,5 @@
         }
       }
     })
-
-    vm._data.arr.push({ hei: 'hei' })
-    console.log('vm._data >>> ', vm._data)
   </script>
 </html>

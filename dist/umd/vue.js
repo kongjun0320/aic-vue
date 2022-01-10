@@ -4,6 +4,15 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Vue = factory());
 })(this, (function () { 'use strict';
 
+  /*
+    ast 语法树 是用对象来描述原生语法的
+    虚拟 DOM 用对象来描述 dom 节点
+  */
+  function compileToFunction(template) {
+    console.log(template);
+    return function render() {};
+  }
+
   function _typeof(obj) {
     "@babel/helpers - typeof";
 
@@ -211,7 +220,28 @@
       var vm = this;
       vm.$options = options; // 初始化 state
 
-      initState(vm);
+      initState(vm); // 挂载
+
+      if (vm.$options.el) {
+        vm.$mount(vm.$options.el);
+      }
+    };
+
+    Vue.prototype.$mount = function (el) {
+      var vm = this;
+      var options = vm.$options;
+      el = document.querySelector(el);
+
+      if (!options.render) {
+        var template = options.template;
+
+        if (!template && el) {
+          template = el.outerHTML;
+        }
+
+        var render = compileToFunction(template);
+        options.render = render;
+      }
     };
   }
 
