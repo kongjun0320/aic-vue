@@ -4,12 +4,170 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Vue = factory());
 })(this, (function () { 'use strict';
 
+  // a-0a
+  var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z]*";
+  /*
+    ?: -> 匹配不捕获
+    (?:${ncname}\\:)  ?    ${ncname}
+    <aa:ba>
+  */
+
+  var qnameCapture = "((?:".concat(ncname, "\\:)?").concat(ncname, ")");
+  /*
+    标签开头的正则
+  */
+
+  var startTagOpen = new RegExp("^<".concat(qnameCapture));
+  /*
+    结束标签
+  */
+
+  var endTag = new RegExp("^<\\/".concat(qnameCapture, "[^>]*>"));
+  /*
+    匹配属性
+  */
+
+  var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/;
+  /*
+    匹配标签结束
+    */
+
+  var startTagClose = /^\s*(\/?)>/;
+  var root; // ast 语法树的树根
+
+  var currentParent; // 标识当前的父亲
+
+  var stack = [];
+  var ELEMENT_TYPE = 1;
+  var TEXT_TYPE = 3;
+
+  function createASTElement(tagName, attrs) {
+    return {
+      tag: tagName,
+      type: ELEMENT_TYPE,
+      children: [],
+      attrs: attrs,
+      parent: null
+    };
+  }
+
+  function start(tagName, attrs) {
+    // console.log(`开始标签: ${tagName}, 属性是: ${JSON.stringify(attrs)}`)
+    var element = createASTElement(tagName, attrs);
+
+    if (!root) {
+      root = element;
+    }
+
+    currentParent = element;
+    stack.push(element);
+  }
+
+  function chars(text) {
+    // console.log(`文本是: ${text}`)
+    text = text.replace(/\s/g, '');
+
+    if (text) {
+      currentParent.children.push({
+        text: text,
+        type: TEXT_TYPE
+      });
+    }
+  }
+
+  function end(tagName) {
+    // console.log(`结束标签: ${tagName}`)
+    var element = stack.pop();
+    currentParent = stack[stack.length - 1];
+
+    if (currentParent) {
+      element.parent = currentParent;
+      currentParent.children.push(element);
+    }
+  }
+
+  function parseHTML(html) {
+    while (html) {
+      var textEnd = html.indexOf('<'); // 如果索引为0 肯定是一个标签 开头/结尾
+
+      if (textEnd === 0) {
+        // 通过这个方法获取匹配到的结果 tagName attrs
+        var startTagMatch = parseStartTag();
+
+        if (startTagMatch) {
+          start(startTagMatch.tagName, startTagMatch.attrs); // 如果开始标签匹配完毕后 继续下一次匹配
+
+          continue;
+        } // <h3/>
+
+
+        var endTagMatch = html.match(endTag);
+
+        if (endTagMatch) {
+          advance(endTagMatch[0].length);
+          end(endTagMatch[1]);
+          continue;
+        }
+      }
+
+      var text = void 0;
+
+      if (textEnd > 0) {
+        text = html.substring(0, textEnd);
+      } // 文本
+
+
+      if (text) {
+        advance(text.length);
+        chars(text);
+      }
+    }
+
+    function advance(n) {
+      html = html.substring(n);
+    }
+
+    function parseStartTag() {
+      var start = html.match(startTagOpen);
+
+      if (start) {
+        var match = {
+          tagName: start[1],
+          attrs: []
+        }; // 标签
+
+        advance(start[0].length);
+
+        var _end, attr;
+
+        while (!(_end = html.match(startTagClose)) && (attr = html.match(attribute))) {
+          // 将属性进行解析
+          advance(attr[0].length);
+          match.attrs.push({
+            name: attr[1],
+            value: attr[3] || att[4] || attr[5]
+          });
+        }
+
+        if (_end) {
+          // 结束标签 >
+          advance(_end[0].length);
+          return match;
+        }
+      }
+    }
+
+    return root;
+  }
+
   /*
     ast 语法树 是用对象来描述原生语法的
     虚拟 DOM 用对象来描述 dom 节点
   */
   function compileToFunction(template) {
-    console.log(template);
+    // 解析 html 字符串，将html字符串 -> ast 语法树
+    var root = parseHTML(template);
+    console.log(root);
     return function render() {};
   }
 
