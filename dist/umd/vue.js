@@ -349,6 +349,35 @@
     return renderFn;
   }
 
+  var Watcher = /*#__PURE__*/_createClass(function Watcher() {
+    _classCallCheck(this, Watcher);
+  });
+
+  function mountComponent(vm, el) {
+    vm.$options; // render
+    // 真实的DOM元素
+
+    vm.$el = el; // 渲染页面
+    // 无论是渲染还是更新都是会调用此方法
+
+    var updateComponent = function updateComponent() {
+      // _render: 返回的是虚拟dom
+      // _update: 返回的是真实DOM
+      vm._update(vm._render());
+    }; // 渲染 watcher
+
+
+    new Watcher(vm, updateComponent, function () {}, true); //true 表示他是一个渲染 watchers
+  }
+  function lifecycleMixin(Vue) {
+    Vue.prototype._update = function (vnode) {};
+  }
+  /*
+    watcher 就是用来渲染的
+    vm._render 通过解析 render 方法, 渲染出虚拟 dom
+    vm._update 通过虚拟dom，创建真实的 dom
+  */
+
   function isObject(value) {
     return _typeof(value) === 'object' && value !== null;
   }
@@ -556,9 +585,15 @@
         }
 
         var render = compileToFunction(template);
-        options.render = render;
+        options.render = render; // 渲染当前的组件 挂载这个组件
+
+        mountComponent(vm, el);
       }
     };
+  }
+
+  function renderMixin(Vue) {
+    Vue.prototype._render = function () {};
   }
 
   /*
@@ -575,6 +610,8 @@
 
 
   initMixin(Vue);
+  renderMixin(Vue);
+  lifecycleMixin(Vue);
 
   return Vue;
 
