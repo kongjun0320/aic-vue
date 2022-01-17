@@ -23,10 +23,6 @@ const attribute =
   匹配标签结束
   */
 const startTagClose = /^\s*(\/?)>/
-/*
-  匹配双大括号
-*/
-const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g
 
 let root // ast 语法树的树根
 let currentParent // 标识当前的父亲
