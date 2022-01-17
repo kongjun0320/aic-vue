@@ -30,7 +30,23 @@ function initData(vm) {
     通过递归遍历对 data 中的数据进行观测
     也就是通过 Object.defineProperty 添加 getter/setter 
   */
+
+  for (const key in data) {
+    proxy(vm, '_data', key)
+  }
+
   observe(data)
 }
 function initComputed() {}
 function initWatch() {}
+
+function proxy(vm, source, key) {
+  Object.defineProperty(vm, key, {
+    get() {
+      return vm[source][key]
+    },
+    set(newVal) {
+      vm[source][key] = newVal
+    }
+  })
+}
