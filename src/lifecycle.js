@@ -1,4 +1,5 @@
 import Watcher from './observer/watcher'
+import { patch } from './vdom/patch'
 
 export function mountComponent(vm, el) {
   const options = vm.$options // render
@@ -17,7 +18,10 @@ export function mountComponent(vm, el) {
 }
 
 export function lifecycleMixin(Vue) {
-  Vue.prototype._update = function (vnode) {}
+  Vue.prototype._update = function (vnode) {
+    const vm = this
+    vm.$el = patch(vm.$el, vnode)
+  }
 }
 
 /*

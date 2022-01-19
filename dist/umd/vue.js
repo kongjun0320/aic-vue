@@ -349,9 +349,77 @@
     return renderFn;
   }
 
-  var Watcher = /*#__PURE__*/_createClass(function Watcher() {
-    _classCallCheck(this, Watcher);
-  });
+  var Watcher = /*#__PURE__*/function () {
+    function Watcher(vm, exprOrFn, callback, options) {
+      _classCallCheck(this, Watcher);
+
+      this.vm = vm;
+      this.callback = callback;
+      this.options = options;
+      this.getter = exprOrFn;
+      this.get();
+    }
+
+    _createClass(Watcher, [{
+      key: "get",
+      value: function get() {
+        this.getter();
+      }
+    }]);
+
+    return Watcher;
+  }();
+
+  function patch(oldVnode, vnode) {
+    var isRealElement = oldVnode.nodeType;
+
+    if (isRealElement) {
+      var oldElm = oldVnode; // <div id = 'app'>
+
+      var parentElm = oldElm.parentNode; // body
+
+      var el = createElm(vnode);
+      parentElm.insertBefore(el, oldElm.nextSibling);
+      parentElm.removeChild(oldElm);
+    }
+  }
+
+  function createElm(vnode) {
+    var tag = vnode.tag,
+        children = vnode.children;
+        vnode.key;
+        vnode.data;
+        var text = vnode.text;
+
+    if (typeof tag === 'string') {
+      vnode.el = document.createElement(tag);
+      updateProperties(vnode);
+      children.forEach(function (child) {
+        return vnode.el.appendChild(createElm(child));
+      });
+    } else {
+      vnode.el = document.createTextNode(text);
+    }
+
+    return vnode.el;
+  }
+
+  function updateProperties(vnode) {
+    var newProps = vnode.data;
+    var el = vnode.el;
+
+    for (var key in newProps) {
+      if (key === 'style') {
+        for (var styleName in newProps.style) {
+          el.style[styleName] = newProps.style[styleName];
+        }
+      } else if (key === 'class') {
+        el.className = newProps["class"];
+      } else {
+        el.setAttribute(key, newProps[key]);
+      }
+    }
+  }
 
   function mountComponent(vm, el) {
     vm.$options; // render
@@ -370,7 +438,10 @@
     new Watcher(vm, updateComponent, function () {}, true); //true 表示他是一个渲染 watchers
   }
   function lifecycleMixin(Vue) {
-    Vue.prototype._update = function (vnode) {};
+    Vue.prototype._update = function (vnode) {
+      var vm = this;
+      vm.$el = patch(vm.$el, vnode);
+    };
   }
   /*
     watcher 就是用来渲染的
@@ -497,15 +568,15 @@
     observe(value);
     Object.defineProperty(data, key, {
       get: function get() {
-        console.log('收集依赖: ', key);
+        // console.log('收集依赖: ', key)
         return value;
       },
       set: function set(newVal) {
         if (newVal === value) {
           return;
-        }
+        } // console.log('触发更新: ', key)
+        // 新设置的值 也需要观测
 
-        console.log('触发更新: ', key); // 新设置的值 也需要观测
 
         observe(newVal);
         value = newVal;
@@ -592,8 +663,55 @@
     };
   }
 
+  function createELement(tag) {
+    var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var key = data.key;
+
+    if (key) {
+      delete data.key;
+    }
+
+    for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      children[_key - 2] = arguments[_key];
+    }
+
+    return vnode(tag, data, key, children, undefined);
+  }
+  function createTextNode(text) {
+    return vnode(undefined, undefined, undefined, undefined, text);
+  }
+
+  function vnode(tag, data, key, children, text) {
+    return {
+      tag: tag,
+      data: data,
+      key: key,
+      children: children,
+      text: text
+    };
+  }
+  /*
+    将 template 转换成 ast语法树 -> 生成 render 方法 ->  生成虚拟dom -> 真实 dom
+  */
+
   function renderMixin(Vue) {
-    Vue.prototype._render = function () {};
+    Vue.prototype._c = function () {
+      return createELement.apply(void 0, arguments);
+    };
+
+    Vue.prototype._v = function (text) {
+      return createTextNode(text);
+    };
+
+    Vue.prototype._s = function (val) {
+      return val === null ? '' : _typeof(val) === 'object' ? JSON.stringify('val') : val;
+    };
+
+    Vue.prototype._render = function () {
+      var vm = this;
+      var render = vm.$options.render;
+      return render.call(vm);
+    };
   }
 
   /*

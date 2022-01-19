@@ -41,14 +41,14 @@ function defineReactive(data, key, value) {
 
   Object.defineProperty(data, key, {
     get() {
-      console.log('收集依赖: ', key)
+      // console.log('收集依赖: ', key)
       return value
     },
     set(newVal) {
       if (newVal === value) {
         return
       }
-      console.log('触发更新: ', key)
+      // console.log('触发更新: ', key)
       // 新设置的值 也需要观测
       observe(newVal)
       value = newVal
